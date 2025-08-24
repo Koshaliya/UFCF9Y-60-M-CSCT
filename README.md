@@ -6,30 +6,39 @@ This project detects anomalies in ECG signals by combining self-supervised learn
 
 ## Methodology
 
-1. Autoencoder
+### 1. **Autoencoder (Self-Supervised Pretraining)**
 
-   - Learns normal ECG beat structure.
-   - Anomalies detected using reconstruction error thresholds (basic & Youden’s J).
+- A **1D Convolutional Autoencoder** is trained exclusively on **normal ECG beats** from the PTB Diagnostic ECG Database (PTBDB).
+- The model learns to reconstruct normal physiological patterns.
+- **Anomalies are detected** based on high reconstruction error (Mean Absolute Error).
+- Two thresholding strategies:
+  - **95th percentile** of normal reconstruction errors (baseline)
+  - **Youden’s J statistic** on ROC curve (optimized threshold)
 
-2. Hybrid Approach
+### 2. **Hybrid Classification (Supervised Refinement)**
 
-   - Encoder outputs fed into classifiers:
-   - Random Forest (RF)
-   - Tuned RF with Stratified K-Fold cross-validation
-   - MLP
-   - Logistic Regression
+To improve detection beyond thresholding, the **encoder’s latent features** are used as input to supervised classifiers:
 
-3. Hyperparameter Tuning
+| Classifier                       | Description                                                             |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| **Random Forest (RF)**           | Tree-based ensemble; robust to overfitting, provides feature importance |
+| **Multi-Layer Perceptron (MLP)** | Feedforward neural network for non-linear pattern detection             |
+| **Logistic Regression (LR)**     | Linear baseline for evaluating separability in latent space             |
 
-   - RF tuned using GridSearchCV with 5-fold StratifiedKFold.
-   - Reduced overfitting while preserving performance.
+### 3. **Hyperparameter Tuning**
 
-## Requirements
-
-- Python 3.8+
-- TensorFlow / Keras
-- scikit-learn
-- NumPy, Pandas, Matplotlib, Seaborn
+- **Tuned Random Forest** selected as final model.
+- **GridSearchCV** with **5-fold StratifiedKFold** cross-validation.
+- Parameter grid:
+  ```python
+  {
+      'n_estimators': [100, 200],
+      'max_depth': [10, 15],
+      'min_samples_split': [2, 5],
+      'min_samples_leaf': [1, 2],
+      'max_features': ['sqrt']
+  }
+  ```
 
 ## Conclusion
 
